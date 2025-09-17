@@ -1,0 +1,25 @@
+name: Claude Simple Test
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  claude-response:
+    if: contains(github.event.comment.body, '@claude')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Claude Response
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.STDLIBSCHEMA_GITHUB_TOKEN }}
+          trigger_phrase: "@claude"

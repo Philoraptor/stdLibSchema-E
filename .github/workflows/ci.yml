@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Test on Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: ['24.5.0']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: stdLibSchema/package-lock.json
+    
+    - name: Install dependencies
+      run: |
+        cd stdLibSchema
+        npm ci --legacy-peer-deps
+    
+    - name: Build
+      run: |
+        cd stdLibSchema
+        npm run build
+    
+    - name: Cache warmup
+      run: |
+        cd stdLibSchema
+        npm run cache:warm || echo "Cache warmup failed, continuing..."
+    
+    - name: Run tests with coverage
+      run: |
+        cd stdLibSchema
+        # Run infrastructure tests with safe coverage
+        npm run coverage:batched || npx jest --coverage --coverageDirectory=coverage --ci --selectProjects=stdlib,specs,schematics
+      env:
+        NODE_OPTIONS: '--max-old-space-size=4096'
+
+    - name: Test Phase 2C Infrastructure
+      run: |
+        cd stdLibSchema
+        # Test error handling infrastructure
+        npx jest --selectProjects=stdlib --testNamePattern="error" --ci
+        # Test logging infrastructure
+        npx jest --selectProjects=stdlib --testNamePattern="logging" --ci
+        # Test filesystem utilities
+        npx jest --selectProjects=stdlib --testNamePattern="filesystem" --ci
+        # Test caching infrastructure
+        npx jest --selectProjects=stdlib --testNamePattern="cache" --ci
+      env:
+        NODE_OPTIONS: '--max-old-space-size=4096'
+    
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: stdLibSchema/test-results/
+    
+    - name: Upload coverage reports to Codecov
+      if: always()
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        directory: stdLibSchema/coverage
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  build:
+    name: Build and Type Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24.5.0'
+        cache: 'npm'
+        cache-dependency-path: stdLibSchema/package-lock.json
+    
+    - name: Install dependencies
+      run: |
+        cd stdLibSchema
+        npm ci --legacy-peer-deps
+    
+    - name: TypeScript strict check
+      run: |
+        cd stdLibSchema
+        npx tsc --noEmit --strict
+    
+    - name: Build project
+      run: |
+        cd stdLibSchema
+        npm run build
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts
+        path: stdLibSchema/dist/
+        retention-days: 7

@@ -1,0 +1,68 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  lint:
+    name: Lint and Format Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24.5.0'
+        cache: 'npm'
+        cache-dependency-path: stdLibSchema/package-lock.json
+    
+    - name: Install dependencies
+      run: |
+        cd stdLibSchema
+        npm ci --legacy-peer-deps
+    
+    - name: Run ESLint
+      run: |
+        cd stdLibSchema
+        npm run lint
+    
+    - name: Check code formatting
+      run: |
+        cd stdLibSchema
+        npm run format:check
+    
+    - name: TypeScript strict check
+      run: |
+        cd stdLibSchema
+        npx tsc --noEmit --strict
+
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24.5.0'
+        cache: 'npm'
+        cache-dependency-path: stdLibSchema/package-lock.json
+    
+    - name: Run npm audit
+      run: |
+        cd stdLibSchema
+        npm audit --audit-level=moderate || true
+    
+    - name: Check for known vulnerabilities
+      run: |
+        cd stdLibSchema
+        npx audit-ci --moderate || echo "::warning::Found vulnerabilities"

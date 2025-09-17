@@ -1,0 +1,354 @@
+{
+  "metadata": {
+    "name": "Functional Programming Enhancement - Task Integration Map",
+    "version": "2.0.0",
+    "created": "2025-08-16T00:13:38Z",
+    "updated": "2025-08-16T00:13:38Z",
+    "source_plan": "task-action-plan-refactored/functional-programming-enhancement-20250809.json",
+    "description": "Maps functional programming enhancement tasks with real duck-doctor validation",
+    "status": "ACTIVE_WITH_VALIDATION",
+    "integration_note": "Requires real duck-doctor agent validation before considering tasks complete"
+  },
+  
+  "validation_requirements": {
+    "duck_doctor_integration": {
+      "agent": "../.claude/agents/duck-doctor.md",
+      "command": "../.claude/commands/agent-doctor.md",
+      "validation_workflow": [
+        "1. Run duck-doctor assessment on modified modules",
+        "2. Compare scores against baseline from 2025-08-09",
+        "3. Ensure no regression in documentation quality",
+        "4. Update task status only after duck-doctor approval"
+      ],
+      "minimum_score": 7.0,
+      "critical_modules": [
+        "src/stdlib/rumination/pattern-recognition.ts",
+        "src/stdlib/rumination/learning-engine.ts",
+        "src/stdlib/functional/result.ts",
+        "src/stdlib/functional/pipe.ts"
+      ]
+    }
+  },
+  
+  "task_to_code_mapping": {
+    "FP-001_Doc_Quality_Assessment": {
+      "objective": "Use duck-doctor to assess and improve documentation across functional modules",
+      "status": "REQUIRES_REVALIDATION",
+      "validation_note": "Original assessment from 2025-08-09 may be outdated",
+      "affected_modules": [
+        {
+          "module": "rumination",
+          "files": ["pattern-recognition.ts", "learning-engine.ts"],
+          "last_known_score": 4,
+          "target_score": 7,
+          "duck_doctor_findings": {
+            "original": "Missing documentation, high complexity, imperative style",
+            "required_actions": [
+              "Add comprehensive JSDoc with @example tags",
+              "Include algorithm complexity documentation",
+              "Document the functional transformation approach"
+            ]
+          }
+        },
+        {
+          "module": "functional",
+          "files": ["result.ts", "pipe.ts"],
+          "last_known_score_avg": 7,
+          "target_score": 9,
+          "duck_doctor_findings": {
+            "original": "Missing JSDoc, no async support, missing combinators",
+            "required_actions": [
+              "Document all new combinators with examples",
+              "Add TypeScript generics documentation",
+              "Include performance characteristics"
+            ]
+          }
+        }
+      ],
+      "verification_command": "npx ts-node ../.claude/commands/agent-doctor.md --assess src/stdlib/"
+    },
+    
+    "FP-002_Result_Monad_Enhancement": {
+      "objective": "Add missing combinators and improve type safety for Result/Either monad",
+      "status": "IMPLEMENTATION_COMPLETE_PENDING_VALIDATION",
+      "implementation_location": "src/stdlib/functional/result.ts",
+      "added_combinators": [
+        {
+          "name": "bimap",
+          "purpose": "Map both success and error simultaneously",
+          "documentation_status": "NEEDS_EXAMPLES"
+        },
+        {
+          "name": "traverse",
+          "purpose": "Apply function returning Result within container",
+          "documentation_status": "NEEDS_EXAMPLES"
+        },
+        {
+          "name": "sequence",
+          "purpose": "Convert container of Results to Result of container",
+          "documentation_status": "NEEDS_EXAMPLES"
+        },
+        {
+          "name": "fold",
+          "purpose": "Reduce Result to single value",
+          "documentation_status": "DOCUMENTED"
+        },
+        {
+          "name": "filterOrElse",
+          "purpose": "Filter with fallback to error",
+          "documentation_status": "NEEDS_REVIEW"
+        }
+      ],
+      "tests_location": "src/stdlib/functional/__tests__/result.spec.ts",
+      "lines_of_code_added": 221,
+      "test_coverage_target": "100%",
+      "duck_doctor_checklist": [
+        "[ ] All combinators have JSDoc with @example",
+        "[ ] Type signatures are fully documented",
+        "[ ] Edge cases are documented",
+        "[ ] Performance implications noted"
+      ]
+    },
+    
+    "FP-003_Pattern_Recognition_Refactoring": {
+      "objective": "Convert imperative algorithms in pattern-recognition.ts to functional style",
+      "status": "NEEDS_IMPLEMENTATION_VERIFICATION",
+      "implementation_location": "src/stdlib/rumination/pattern-recognition.ts",
+      "refactored_algorithms": [
+        {
+          "name": "levenshteinDistance",
+          "lines": "454-482",
+          "improvement": "Memoization and functional reduce pattern",
+          "verification_needed": [
+            "Performance benchmarks against original",
+            "Memory usage profiling",
+            "Edge case testing with large strings"
+          ]
+        },
+        {
+          "name": "astComparison",
+          "lines": "1292-1341",
+          "improvement": "Immutable data structures and functional fold",
+          "verification_needed": [
+            "AST comparison accuracy",
+            "Performance with deep nesting",
+            "Memory efficiency"
+          ]
+        },
+        {
+          "name": "cyclomaticComplexity",
+          "lines": "151-180",
+          "improvement": "Pattern matching with Map and functional reducers",
+          "complexity_reduction": {
+            "before": 13,
+            "after": 5,
+            "verified": false
+          },
+          "verification_needed": [
+            "Complexity calculation accuracy",
+            "Performance comparison",
+            "Test coverage for all code paths"
+          ]
+        }
+      ],
+      "duck_doctor_requirements": {
+        "minimum_score": 7.5,
+        "required_documentation": [
+          "Algorithm complexity (Big O)",
+          "Space complexity",
+          "Example usage",
+          "Performance characteristics"
+        ]
+      }
+    },
+    
+    "FP-004_Learning_Engine_State_Monad": {
+      "objective": "Model feedback loops in the Learning Engine as monadic state transformations",
+      "status": "ARCHITECTURAL_CHANGE_PENDING",
+      "implementation_location": "src/stdlib/rumination/learning-engine.ts",
+      "key_changes": [
+        {
+          "change": "Replace direct state mutation with immutable State monad",
+          "impact": "Breaking change for existing consumers",
+          "migration_guide_needed": true
+        },
+        {
+          "change": "Compose 8-phase learning pipeline using functional composition",
+          "phases": [
+            "initialization",
+            "data_collection",
+            "pattern_extraction",
+            "model_update",
+            "validation",
+            "feedback_integration",
+            "optimization",
+            "persistence"
+          ]
+        },
+        {
+          "change": "Implement gradient descent as pure functional optimizer",
+          "mathematical_validation_needed": true
+        }
+      ],
+      "testing_requirements": [
+        "Property-based testing for state transitions",
+        "Snapshot testing for state evolution",
+        "Performance regression testing"
+      ],
+      "duck_doctor_validation": {
+        "focus_areas": [
+          "Mathematical formula documentation",
+          "State transition diagrams",
+          "Example workflows"
+        ]
+      }
+    },
+    
+    "FP-005_Async_Composition_Utilities": {
+      "objective": "Add async support to pipe and compose utilities",
+      "status": "READY_FOR_INTEGRATION",
+      "implementation_location": "src/stdlib/functional/pipe.ts",
+      "added_utilities": [
+        {
+          "name": "asyncPipe",
+          "signature": "<T>(...fns: Array<(x: any) => Promise<any>>) => (x: T) => Promise<any>",
+          "test_coverage": "95%"
+        },
+        {
+          "name": "asyncFlow",
+          "signature": "Similar to asyncPipe but with error boundaries",
+          "test_coverage": "92%"
+        },
+        {
+          "name": "pipeWith",
+          "signature": "Custom combining function for specialized composition",
+          "test_coverage": "88%"
+        },
+        {
+          "name": "converge",
+          "signature": "Apply and combine multiple functions",
+          "test_coverage": "90%"
+        },
+        {
+          "name": "juxt",
+          "signature": "Apply multiple functions to same value",
+          "test_coverage": "93%"
+        }
+      ],
+      "lines_of_code_added": 223,
+      "integration_points": [
+        "BLC-001 async message handling",
+        "File system operations in stdlib",
+        "Network requests in agents"
+      ]
+    }
+  },
+  
+  "semantic_embedding": {
+    "purpose": "Create embeddings that capture functional programming patterns and transformations",
+    "chunking_strategy": {
+      "method": "pattern-based",
+      "chunks": [
+        {
+          "id": "fp_patterns_overview",
+          "content": "Core functional programming patterns introduced",
+          "keywords": ["monad", "combinator", "composition", "immutability"]
+        },
+        {
+          "id": "state_management_transformation",
+          "content": "Migration from mutable to immutable state management",
+          "keywords": ["State monad", "immutability", "pure functions"]
+        },
+        {
+          "id": "async_functional_patterns",
+          "content": "Asynchronous functional composition patterns",
+          "keywords": ["asyncPipe", "Promise composition", "error handling"]
+        },
+        {
+          "id": "algorithm_refactoring",
+          "content": "Imperative to functional algorithm transformations",
+          "keywords": ["memoization", "fold", "reduce", "recursion"]
+        }
+      ]
+    },
+    "embedding_priority": 1,
+    "vector_dimensions": 1536
+  },
+  
+  "integration_with_duckplane": {
+    "relevance": "High - Functional patterns align with DuckPlane's event-driven architecture",
+    "touchpoints": [
+      {
+        "duckplane_task": "Task 001: Master Architecture Setup",
+        "stdlibschema_contribution": "Functional event handling patterns from asyncPipe"
+      },
+      {
+        "duckplane_task": "Task 002: Rumination Layer Foundation",
+        "stdlibschema_contribution": "State monad patterns for rumination state management"
+      },
+      {
+        "duckplane_task": "Task 003: Agent Communication Protocol",
+        "stdlibschema_contribution": "Result monad for error handling in gRPC communication"
+      }
+    ],
+    "shared_patterns": [
+      "Event sourcing (functional event fold)",
+      "Immutable state management",
+      "Composable middleware (pipe pattern)",
+      "Error handling without exceptions (Result monad)"
+    ]
+  },
+  
+  "next_actions": {
+    "immediate": [
+      {
+        "action": "Run duck-doctor validation on all modified files",
+        "command": "npx ts-node ../.claude/commands/agent-doctor.md --validate-fp-enhancements",
+        "success_criteria": "All files score >= 7.0"
+      },
+      {
+        "action": "Update test coverage reports",
+        "command": "npm run test:coverage:functional",
+        "success_criteria": "Coverage >= 95%"
+      }
+    ],
+    "short_term": [
+      {
+        "action": "Create migration guide for State monad adoption",
+        "deliverable": "docs/migration/state-monad-migration.md"
+      },
+      {
+        "action": "Benchmark functional vs imperative implementations",
+        "deliverable": "benchmarks/functional-performance.json"
+      }
+    ],
+    "long_term": [
+      {
+        "action": "Extend functional patterns to schematics module",
+        "scope": "src/schematics/**/*.ts"
+      },
+      {
+        "action": "Create functional programming style guide",
+        "deliverable": "docs/style-guides/functional-programming.md"
+      }
+    ]
+  },
+  
+  "metrics": {
+    "documentation_coverage": {
+      "before": "45%",
+      "after": "TBD - pending duck-doctor validation",
+      "target": "85%"
+    },
+    "cyclomatic_complexity": {
+      "average_before": 8.2,
+      "average_after": "TBD - pending analysis",
+      "target": 5.0
+    },
+    "test_coverage": {
+      "functional_module": "95%",
+      "rumination_module": "65%",
+      "overall": "72%"
+    }
+  }
+}

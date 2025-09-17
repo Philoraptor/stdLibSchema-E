@@ -1,0 +1,142 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.2.3)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24.5.0'
+        cache: 'npm'
+        cache-dependency-path: stdLibSchema/package-lock.json
+        registry-url: 'https://registry.npmjs.org'
+    
+    - name: Install dependencies
+      run: |
+        cd stdLibSchema
+        npm ci
+    
+    - name: Build project
+      run: |
+        cd stdLibSchema
+        npm run build
+    
+    - name: Run tests
+      run: |
+        cd stdLibSchema
+        npm test -- --ci
+    
+    - name: Run linter
+      run: |
+        cd stdLibSchema
+        npm run lint
+    
+    - name: Generate changelog
+      id: changelog
+      uses: TriPSs/conventional-changelog-action@v5
+      with:
+        github-token: ${{ secrets.STDLIBSCHEMA_GITHUB_TOKEN }}
+        output-file: 'CHANGELOG.md'
+        preset: 'angular'
+        tag-prefix: 'v'
+        release-count: 0
+        skip-version-file: true
+        skip-commit: true
+        working-directory: './stdLibSchema'
+    
+    - name: Create GitHub Release
+      if: steps.changelog.outputs.skipped == 'false'
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: "stdLibSchema/dist/**/*"
+        body: ${{ steps.changelog.outputs.clean_changelog }}
+        tag: ${{ steps.changelog.outputs.tag }}
+        token: ${{ secrets.STDLIBSCHEMA_GITHUB_TOKEN }}
+        draft: false
+        prerelease: false
+    
+    - name: Publish to NPM
+      if: steps.changelog.outputs.skipped == 'false'
+      run: |
+        cd stdLibSchema
+        npm publish
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  release-manual:
+    name: Manual Release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24.5.0'
+        cache: 'npm'
+        cache-dependency-path: stdLibSchema/package-lock.json
+        registry-url: 'https://registry.npmjs.org'
+    
+    - name: Install dependencies
+      run: |
+        cd stdLibSchema
+        npm ci
+    
+    - name: Update version
+      run: |
+        cd stdLibSchema
+        npm version ${{ github.event.inputs.version }} --no-git-tag-version
+    
+    - name: Build project
+      run: |
+        cd stdLibSchema
+        npm run build
+    
+    - name: Run tests
+      run: |
+        cd stdLibSchema
+        npm test -- --ci
+    
+    - name: Create tag and release
+      run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        cd stdLibSchema
+        git add package.json package-lock.json
+        git commit -m "chore: release v${{ github.event.inputs.version }}"
+        git tag -a "v${{ github.event.inputs.version }}" -m "Release v${{ github.event.inputs.version }}"
+        git push origin HEAD:main
+        git push origin "v${{ github.event.inputs.version }}"
+    
+    - name: Publish to NPM
+      run: |
+        cd stdLibSchema
+        npm publish
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

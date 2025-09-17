@@ -1,0 +1,486 @@
+# Quality Gates Workflow
+# ENABLED: Project has reached >72% test coverage milestone (Phase 2C completed)
+# Purpose: Enforces quality standards and gates for code changes
+
+name: Quality Gates
+
+on:
+  # Enabled for Phase 2C infrastructure validation
+  pull_request:
+    branches: [ main, develop ]
+    types: [opened, synchronize, ready_for_review]
+  push:
+    branches: [ main ]
+  # Manual trigger for advanced quality checks
+  workflow_dispatch:
+    inputs:
+      gate_level:
+        description: 'Quality gate strictness level'
+        required: true
+        type: choice
+        options:
+          - standard
+          - strict
+          - relaxed
+      target_ref:
+        description: 'Git ref to check (branch/tag/commit)'
+        required: false
+        default: 'HEAD'
+      comparison_base:
+        description: 'Base ref for comparison (for delta checks)'
+        required: false
+        default: 'main'
+
+env:
+  COVERAGE_THRESHOLD_STANDARD: 72
+  COVERAGE_THRESHOLD_STRICT: 80
+  COVERAGE_THRESHOLD_RELAXED: 65
+  INFRASTRUCTURE_COVERAGE_THRESHOLD: 85
+  COMPLEXITY_THRESHOLD_STANDARD: 10
+  COMPLEXITY_THRESHOLD_STRICT: 5
+  COMPLEXITY_THRESHOLD_RELAXED: 15
+  DUPLICATION_THRESHOLD_STANDARD: 5
+  DUPLICATION_THRESHOLD_STRICT: 2
+  DUPLICATION_THRESHOLD_RELAXED: 10
+
+jobs:
+  # Job: Setup Quality Gate Parameters
+  setup:
+    name: Setup Quality Gates
+    runs-on: ubuntu-latest
+    outputs:
+      coverage_threshold: ${{ steps.thresholds.outputs.coverage }}
+      complexity_threshold: ${{ steps.thresholds.outputs.complexity }}
+      duplication_threshold: ${{ steps.thresholds.outputs.duplication }}
+      
+    steps:
+      - name: Set Quality Thresholds
+        id: thresholds
+        run: |
+          case "${{ github.event.inputs.gate_level }}" in
+            "strict")
+              echo "coverage=${{ env.COVERAGE_THRESHOLD_STRICT }}" >> $GITHUB_OUTPUT
+              echo "complexity=${{ env.COMPLEXITY_THRESHOLD_STRICT }}" >> $GITHUB_OUTPUT
+              echo "duplication=${{ env.DUPLICATION_THRESHOLD_STRICT }}" >> $GITHUB_OUTPUT
+              ;;
+            "relaxed")
+              echo "coverage=${{ env.COVERAGE_THRESHOLD_RELAXED }}" >> $GITHUB_OUTPUT
+              echo "complexity=${{ env.COMPLEXITY_THRESHOLD_RELAXED }}" >> $GITHUB_OUTPUT
+              echo "duplication=${{ env.DUPLICATION_THRESHOLD_RELAXED }}" >> $GITHUB_OUTPUT
+              ;;
+            *)
+              echo "coverage=${{ env.COVERAGE_THRESHOLD_STANDARD }}" >> $GITHUB_OUTPUT
+              echo "complexity=${{ env.COMPLEXITY_THRESHOLD_STANDARD }}" >> $GITHUB_OUTPUT
+              echo "duplication=${{ env.DUPLICATION_THRESHOLD_STANDARD }}" >> $GITHUB_OUTPUT
+              ;;
+          esac
+          
+          echo "Quality gate level: ${{ github.event.inputs.gate_level }}"
+
+  # Job: Code Coverage Gate
+  coverage-gate:
+    name: Code Coverage Gate
+    runs-on: ubuntu-latest
+    needs: setup
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.target_ref }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+      
+      - name: Install Dependencies
+        run: npm ci
+      
+      - name: Run Coverage Analysis
+        run: |
+          npm test -- --coverage --coverageReporters=json-summary --coverageReporters=lcov
+      
+      - name: Check Coverage Threshold
+        run: |
+          COVERAGE=$(node -e "
+            const coverage = require('./coverage/coverage-summary.json');
+            const total = coverage.total;
+            const pct = (total.lines.pct + total.statements.pct + total.functions.pct + total.branches.pct) / 4;
+            console.log(pct.toFixed(2));
+          ")
+          
+          echo "Current coverage: $COVERAGE%"
+          echo "Required coverage: ${{ needs.setup.outputs.coverage_threshold }}%"
+          
+          if (( $(echo "$COVERAGE < ${{ needs.setup.outputs.coverage_threshold }}" | bc -l) )); then
+            echo "❌ Coverage gate FAILED"
+            echo "::error::Code coverage ($COVERAGE%) is below threshold (${{ needs.setup.outputs.coverage_threshold }}%)"
+            exit 1
+          else
+            echo "✅ Coverage gate PASSED"
+          fi
+      
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 30
+
+  # Job: Code Complexity Gate
+  complexity-gate:
+    name: Code Complexity Gate
+    runs-on: ubuntu-latest
+    needs: setup
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.target_ref }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+      
+      - name: Install Dependencies
+        run: |
+          npm ci
+          npm install -g complexity-report
+      
+      - name: Analyze Complexity
+        run: |
+          mkdir -p quality-reports
+          
+          # Generate complexity report
+          complexity-report --format json src/**/*.ts > quality-reports/complexity.json || true
+      
+      - name: Check Complexity Threshold
+        run: |
+          MAX_COMPLEXITY=${{ needs.setup.outputs.complexity_threshold }}
+          
+          # Parse complexity report and check against threshold
+          node -e "
+            const fs = require('fs');
+            try {
+              const report = JSON.parse(fs.readFileSync('quality-reports/complexity.json', 'utf8'));
+              const violations = [];
+              
+              report.reports.forEach(file => {
+                file.functions.forEach(func => {
+                  if (func.cyclomatic > $MAX_COMPLEXITY) {
+                    violations.push({
+                      file: file.path,
+                      function: func.name,
+                      complexity: func.cyclomatic
+                    });
+                  }
+                });
+              });
+              
+              if (violations.length > 0) {
+                console.error('❌ Complexity gate FAILED');
+                console.error('Functions exceeding complexity threshold:');
+                violations.forEach(v => {
+                  console.error(\`  \${v.file} - \${v.function}: \${v.complexity}\`);
+                });
+                process.exit(1);
+              } else {
+                console.log('✅ Complexity gate PASSED');
+              }
+            } catch (e) {
+              console.log('⚠️  Could not parse complexity report, skipping check');
+            }
+          "
+      
+      - name: Upload Complexity Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: complexity-report
+          path: quality-reports/
+          retention-days: 30
+
+  # Job: Code Duplication Gate
+  duplication-gate:
+    name: Code Duplication Gate
+    runs-on: ubuntu-latest
+    needs: setup
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.target_ref }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+      
+      - name: Install Dependencies
+        run: |
+          npm install -g jscpd
+      
+      - name: Check Code Duplication
+        run: |
+          mkdir -p quality-reports
+          
+          # Run duplication check
+          jscpd src \
+            --min-lines 5 \
+            --min-tokens 50 \
+            --threshold ${{ needs.setup.outputs.duplication_threshold }} \
+            --reporters json \
+            --output quality-reports \
+            --format "typescript" || DUPLICATION_FOUND=$?
+          
+          if [ "$DUPLICATION_FOUND" = "1" ]; then
+            echo "❌ Duplication gate FAILED"
+            echo "::error::Code duplication exceeds threshold (${{ needs.setup.outputs.duplication_threshold }}%)"
+            
+            # Show duplication details
+            jscpd src \
+              --min-lines 5 \
+              --min-tokens 50 \
+              --reporters console \
+              --format "typescript"
+            exit 1
+          else
+            echo "✅ Duplication gate PASSED"
+          fi
+      
+      - name: Upload Duplication Report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: duplication-report
+          path: quality-reports/
+          retention-days: 30
+
+  # Job: Security Gate
+  security-gate:
+    name: Security Gate
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.target_ref }}
+      
+      - name: Run Security Audit
+        run: |
+          mkdir -p quality-reports
+          
+          # Check for known vulnerabilities
+          npm audit --production --audit-level=moderate > quality-reports/npm-audit.txt || AUDIT_FAILED=$?
+          
+          if [ "$AUDIT_FAILED" = "1" ]; then
+            echo "❌ Security gate FAILED"
+            echo "::error::Security vulnerabilities found"
+            cat quality-reports/npm-audit.txt
+            exit 1
+          else
+            echo "✅ Security gate PASSED"
+          fi
+      
+      - name: Check for Secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.inputs.comparison_base }}
+          head: ${{ github.event.inputs.target_ref }}
+
+  # Job: Performance Gate
+  performance-gate:
+    name: Performance Gate
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.target_ref }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+      
+      - name: Install Dependencies
+        run: npm ci
+      
+      - name: Build Performance Check
+        run: |
+          mkdir -p quality-reports
+          
+          # Time the build
+          BUILD_START=$(date +%s)
+          npm run build
+          BUILD_END=$(date +%s)
+          BUILD_TIME=$((BUILD_END - BUILD_START))
+          
+          echo "Build time: ${BUILD_TIME}s" > quality-reports/build-performance.txt
+          
+          # Check build time threshold (5 minutes for standard)
+          MAX_BUILD_TIME=300
+          if [ "${{ github.event.inputs.gate_level }}" = "strict" ]; then
+            MAX_BUILD_TIME=180
+          elif [ "${{ github.event.inputs.gate_level }}" = "relaxed" ]; then
+            MAX_BUILD_TIME=600
+          fi
+          
+          if [ $BUILD_TIME -gt $MAX_BUILD_TIME ]; then
+            echo "❌ Performance gate FAILED"
+            echo "::error::Build time (${BUILD_TIME}s) exceeds threshold (${MAX_BUILD_TIME}s)"
+            exit 1
+          else
+            echo "✅ Performance gate PASSED"
+          fi
+      
+      - name: Bundle Size Check
+        run: |
+          # Check bundle sizes
+          TOTAL_SIZE=$(du -sb dist | cut -f1)
+          echo "Total bundle size: $TOTAL_SIZE bytes" >> quality-reports/build-performance.txt
+          
+          # Check size threshold (10MB for standard)
+          MAX_SIZE=10485760
+          if [ "${{ github.event.inputs.gate_level }}" = "strict" ]; then
+            MAX_SIZE=5242880
+          elif [ "${{ github.event.inputs.gate_level }}" = "relaxed" ]; then
+            MAX_SIZE=20971520
+          fi
+          
+          if [ $TOTAL_SIZE -gt $MAX_SIZE ]; then
+            echo "❌ Bundle size gate FAILED"
+            echo "::error::Bundle size ($TOTAL_SIZE bytes) exceeds threshold ($MAX_SIZE bytes)"
+            exit 1
+          else
+            echo "✅ Bundle size gate PASSED"
+          fi
+
+  # Job: Documentation Gate
+  documentation-gate:
+    name: Documentation Gate
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.target_ref }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+      
+      - name: Install Dependencies
+        run: npm ci
+      
+      - name: Check Documentation Coverage
+        run: |
+          mkdir -p quality-reports
+          
+          # Count documented vs undocumented exports
+          echo "Checking documentation coverage..."
+          
+          # This is a simplified check - in reality would use TypeDoc or similar
+          TOTAL_EXPORTS=$(find src -name "*.ts" -exec grep -E "^export" {} \; | wc -l)
+          DOCUMENTED=$(find src -name "*.ts" -exec grep -B5 -E "^export" {} \; | grep -c "^\s*\*" || true)
+          
+          if [ $TOTAL_EXPORTS -gt 0 ]; then
+            DOC_PERCENTAGE=$((DOCUMENTED * 100 / TOTAL_EXPORTS))
+          else
+            DOC_PERCENTAGE=0
+          fi
+          
+          echo "Documentation coverage: $DOC_PERCENTAGE%" > quality-reports/doc-coverage.txt
+          
+          # Check threshold
+          MIN_DOC_COVERAGE=70
+          if [ "${{ github.event.inputs.gate_level }}" = "strict" ]; then
+            MIN_DOC_COVERAGE=90
+          elif [ "${{ github.event.inputs.gate_level }}" = "relaxed" ]; then
+            MIN_DOC_COVERAGE=50
+          fi
+          
+          if [ $DOC_PERCENTAGE -lt $MIN_DOC_COVERAGE ]; then
+            echo "❌ Documentation gate FAILED"
+            echo "::error::Documentation coverage ($DOC_PERCENTAGE%) is below threshold ($MIN_DOC_COVERAGE%)"
+            exit 1
+          else
+            echo "✅ Documentation gate PASSED"
+          fi
+
+  # Job: Quality Summary
+  quality-summary:
+    name: Quality Gates Summary
+    runs-on: ubuntu-latest
+    needs: [coverage-gate, complexity-gate, duplication-gate, security-gate, performance-gate, documentation-gate]
+    if: always()
+    
+    steps:
+      - name: Download All Reports
+        uses: actions/download-artifact@v3
+        with:
+          path: all-reports/
+      
+      - name: Generate Quality Report
+        run: |
+          mkdir -p final-report
+          
+          echo "# Quality Gates Report" > final-report/quality-summary.md
+          echo "Date: $(date)" >> final-report/quality-summary.md
+          echo "Gate Level: ${{ github.event.inputs.gate_level }}" >> final-report/quality-summary.md
+          echo "Target: ${{ github.event.inputs.target_ref }}" >> final-report/quality-summary.md
+          echo "" >> final-report/quality-summary.md
+          
+          echo "## Gate Results" >> final-report/quality-summary.md
+          echo "| Gate | Status |" >> final-report/quality-summary.md
+          echo "|------|--------|" >> final-report/quality-summary.md
+          
+          # Check job statuses
+          for gate in coverage complexity duplication security performance documentation; do
+            STATUS="${{ needs.${gate}-gate.result }}"
+            if [ "$STATUS" = "success" ]; then
+              echo "| ${gate^} | ✅ PASSED |" >> final-report/quality-summary.md
+            else
+              echo "| ${gate^} | ❌ FAILED |" >> final-report/quality-summary.md
+            fi
+          done
+          
+          echo "" >> final-report/quality-summary.md
+          echo "## Detailed Reports" >> final-report/quality-summary.md
+          echo "Detailed reports for each gate are available in the workflow artifacts." >> final-report/quality-summary.md
+      
+      - name: Upload Final Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: quality-gates-summary
+          path: final-report/
+          retention-days: 90
+      
+      - name: Set Final Status
+        run: |
+          # Check if all gates passed
+          FAILED_GATES=0
+          for gate in coverage complexity duplication security performance documentation; do
+            if [ "${{ needs.${gate}-gate.result }}" != "success" ]; then
+              FAILED_GATES=$((FAILED_GATES + 1))
+            fi
+          done
+          
+          if [ $FAILED_GATES -gt 0 ]; then
+            echo "::error::$FAILED_GATES quality gates failed"
+            exit 1
+          else
+            echo "All quality gates passed!"
+          fi

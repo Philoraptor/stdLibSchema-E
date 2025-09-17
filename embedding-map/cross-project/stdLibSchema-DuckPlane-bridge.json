@@ -1,0 +1,182 @@
+{
+  "metadata": {
+    "name": "stdLibSchema <-> DuckPlane_exe Cross-Project Bridge Map",
+    "version": "1.0.0",
+    "created": "2025-08-15T23:54:25Z",
+    "description": "Defines the interaction model between stdLibSchema and DuckPlane_exe as two separate but collaborating entities",
+    "relationship_model": "visiting-friends"
+  },
+  
+  "interaction_metaphor": {
+    "concept": "'Visiting Friends Having Dinner'",
+    "stdLibSchema": {
+      "role": "The Host",
+      "responsibilities": [
+        "Providing a well-structured environment (architecture)",
+        "Offering tools and utilities (stdlib)",
+        "Setting the rules and standards (specs)",
+        "Ensuring a quality experience (documentation)"
+      ]
+    },
+    "DuckPlane_exe": {
+      "role": "The Guest",
+      "responsibilities": [
+        "Respecting the host's rules (adhering to specs)",
+        "Using the provided tools appropriately (consuming stdlib)",
+        "Bringing their own contribution (domain-specific logic)",
+        "Engaging in polite conversation (communication protocols)"
+      ]
+    },
+    "dinner_table": {
+      "role": "The Integration Point",
+      "components": [
+        "BLC-001 for inter-project communication",
+        "Shared observability endpoint for monitoring",
+        "gRPC for structured data exchange"
+      ]
+    }
+  },
+  
+  "boundary_definitions": {
+    "stdLibSchema_boundary": {
+      "scope": "Angular Schematics enhancement, code quality, architectural consistency, and development tooling",
+      "exports": [
+        "Reusable utility functions (stdlib)",
+        "Verification and correction rules (specs)",
+        "Schematic implementations (schematics)",
+        "Shared TypeScript types (types)"
+      ],
+      "does_not_export": [
+        "Domain-specific business logic",
+        "Application-level state management",
+        "End-user UI components"
+      ]
+    },
+    "DuckPlane_exe_boundary": {
+      "scope": "Task orchestration, AI-driven rumination, agent coordination, and system-wide monitoring",
+      "consumes": [
+        "stdlib utilities for its agents",
+        "specs framework for self-assessment",
+        "BLC-001 for communication"
+      ],
+      "does_not_provide": [
+        "Low-level file system manipulation (uses stdlib)",
+        "AST transformations (uses stdlib)",
+        "Angular-specific schematics (uses stdLibSchema)"
+      ]
+    }
+  },
+  
+  "communication_protocol": {
+    "primary_channel": "BLC-001",
+    "purpose": "Asynchronous, event-driven communication between the two projects",
+    "schema_definition": "src/blc001/types.ts",
+    "message_types": [
+      {
+        "type": "TaskDispatchRequest",
+        "source": "DuckPlane_exe",
+        "target": "stdLibSchema",
+        "payload": "{ taskId: string, schematicName: string, options: any }"
+      },
+      {
+        "type": "SchematicExecutionResult",
+        "source": "stdLibSchema",
+        "target": "DuckPlane_exe",
+        "payload": "{ taskId: string, status: 'success' | 'failure', outputPath?: string, violations?: SpecViolation[] }"
+      },
+      {
+        "type": "VerificationRequest",
+        "source": "DuckPlane_exe",
+        "target": "stdLibSchema",
+        "payload": "{ files: string[], rules: string[] }"
+      },
+      {
+        "type": "VerificationResponse",
+        "source": "stdLibSchema",
+        "target": "DuckPlane_exe",
+        "payload": "{ violations: SpecViolation[] }"
+      }
+    ],
+    "handshake_process": [
+      "DuckPlane_exe sends a `hello` message via BLC-001",
+      "stdLibSchema responds with `ack` and its capabilities",
+      "Communication channel is established"
+    ]
+  },
+  
+  "shared_resources": {
+    "observability_endpoint": {
+      "path": "/home/robby/_writings/TVLDashboard/doc-interface/src/observability",
+      "purpose": "Shared monitoring and logging for both projects",
+      "data_format": "JSON logs via BLC-003 protocol",
+      "tools": [
+        "SMITH-BLC system",
+        "TaskOrchestrator"
+      ],
+      "contributions": {
+        "stdLibSchema": "Provides detailed schematic execution logs and spec violation reports",
+        "DuckPlane_exe": "Provides high-level orchestration logs and agent performance metrics"
+      }
+    },
+    "documentation_access": {
+      "stdLibSchema_docs": {
+        "path": "/home/robby/_writings/duckduck/stdLibSchema/docs/",
+        "access_level": "read-only for DuckPlane_exe",
+        "purpose": "DuckPlane_exe agents can consult stdLibSchema's architecture and API for planning"
+      },
+      "DuckPlane_exe_docs": {
+        "path": "/home/robby/_writings/DuckPlane_exe/docs/",
+        "access_level": "read-only for stdLibSchema",
+        "purpose": "stdLibSchema can understand the orchestration context it's operating within"
+      }
+    }
+  },
+  
+  "integration_scenarios": {
+    "code_generation": {
+      "initiator": "DuckPlane_exe",
+      "flow": [
+        "1. DuckPlane agent determines need for new component",
+        "2. Sends `TaskDispatchRequest` to stdLibSchema via BLC-001",
+        "3. stdLibSchema executes `page-index` schematic",
+        "4. stdLibSchema returns `SchematicExecutionResult` with generated file paths"
+      ]
+    },
+    "code_verification": {
+      "initiator": "DuckPlane_exe",
+      "flow": [
+        "1. DuckPlane agent wants to verify code quality before commit",
+        "2. Sends `VerificationRequest` with file paths and rules to stdLibSchema",
+        "3. stdLibSchema's specs engine runs verification",
+        "4. stdLibSchema returns `VerificationResponse` with violations"
+      ]
+    },
+    "self_assessment": {
+      "initiator": "stdLibSchema",
+      "flow": [
+        "1. stdLibSchema runs its own specs against its codebase",
+        "2. Sends high-severity violations to DuckPlane_exe for logging and prioritization",
+        "3. DuckPlane_exe may create a new task to address the violation"
+      ]
+    }
+  },
+  
+  "embedding_instructions": {
+    "purpose": "To teach the AI agent the distinct roles and interaction protocols of the two projects.",
+    "chunking_strategy": {
+      "method": "role-based",
+      "chunks": [
+        "stdLibSchema_as_Host",
+        "DuckPlane_exe_as_Guest",
+        "Communication_Protocols",
+        "Shared_Observability"
+      ]
+    },
+    "key_embeddings": [
+      "visiting-friends-metaphor",
+      "boundary-separation",
+      "blc-001-communication",
+      "shared-observability-endpoint"
+    ]
+  }
+}

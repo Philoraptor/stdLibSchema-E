@@ -1,0 +1,307 @@
+{
+  "compatModuleEmbedding": {
+    "overview": "TypeScript compatibility layer providing version-agnostic utilities for cross-version support",
+    "lastUpdated": "2025-01-20",
+    "version": "2.0.0",
+    "purpose": {
+      "primary": "Ensure TypeScript 4.x and 5.x compatibility across stdLibSchema",
+      "secondary": "Provide type-safe utilities for robust AST manipulation",
+      "tertiary": "Enable DuckPlane_exe workflow integration for compatibility checks"
+    },
+    "modules": {
+      "typeSafety": {
+        "location": "src/compat/type-safety.ts",
+        "description": "Comprehensive type safety utilities for null-safe operations",
+        "coverage": "95.91%",
+        "exports": [
+          {
+            "name": "safeArrayAccess",
+            "signature": "<T>(arr: T[] | undefined, index: number): T | undefined",
+            "purpose": "Safe array element access with bounds checking",
+            "usage": "Prevents runtime errors from undefined arrays"
+          },
+          {
+            "name": "isNonNullable",
+            "signature": "<T>(value: T): value is NonNullable<T>",
+            "purpose": "Type guard for non-null/undefined values",
+            "usage": "Enables TypeScript narrowing for safe property access"
+          },
+          {
+            "name": "safePropertyAccess",
+            "signature": "<T, K extends keyof T>(obj: T | null | undefined, key: K): T[K] | undefined",
+            "purpose": "Safe object property access with null checking",
+            "usage": "Prevents 'Cannot read property of undefined' errors"
+          },
+          {
+            "name": "safeStringOperation",
+            "signature": "(str: string | null | undefined, operation: (s: string) => string): string | undefined",
+            "purpose": "Safe string transformations",
+            "usage": "Apply string operations only on defined values"
+          },
+          {
+            "name": "ensureArray",
+            "signature": "<T>(value: T | T[] | undefined): T[]",
+            "purpose": "Convert any value to array safely",
+            "usage": "Normalize single values or arrays to array type"
+          }
+        ],
+        "antipatterns": {
+          "resolved": [
+            "Type assertions without validation",
+            "Unchecked null/undefined operations",
+            "Direct property access on potentially null objects"
+          ],
+          "pattern": "Antipattern #9: Type Safety Issues"
+        }
+      },
+      "typescriptCompat": {
+        "location": "src/compat/typescript.ts",
+        "description": "TypeScript AST manipulation with version abstraction",
+        "coverage": "74.33%",
+        "exports": [
+          {
+            "name": "updateDecorators",
+            "signature": "(node: ts.Node, decorators: readonly ts.Decorator[] | undefined): ts.Node",
+            "purpose": "Version-agnostic decorator updates",
+            "compatibility": "TypeScript 4.x and 5.x",
+            "nodeTypes": [
+              "ClassDeclaration",
+              "MethodDeclaration",
+              "PropertyDeclaration",
+              "ParameterDeclaration",
+              "GetAccessor",
+              "SetAccessor"
+            ]
+          },
+          {
+            "name": "getDecorators",
+            "signature": "(node: ts.Node): readonly ts.Decorator[] | undefined",
+            "purpose": "Retrieve decorators regardless of TS version",
+            "compatibility": "Handles both legacy and modern decorator APIs"
+          },
+          {
+            "name": "createTransformer",
+            "signature": "(context: ts.TransformationContext): ts.Transformer<ts.SourceFile>",
+            "purpose": "Create AST transformers with compatibility layer",
+            "usage": "Build transformers that work across TS versions"
+          },
+          {
+            "name": "isTypeScriptVersion",
+            "signature": "(major: number, minor?: number): boolean",
+            "purpose": "Runtime TypeScript version detection",
+            "usage": "Conditional logic based on TS version"
+          }
+        ],
+        "astHandling": {
+          "decoratorMigration": "Handles TS 4.x decorators to TS 5.x modifiers",
+          "modifierHandling": "Unified API for both decorator and modifier syntax",
+          "nodeFactories": "Version-specific node creation strategies"
+        }
+      },
+      "rxjsCompat": {
+        "location": "src/compat/observable-utils.ts",
+        "description": "RxJS 6/7 compatibility utilities",
+        "exports": [
+          {
+            "name": "observableToPromise",
+            "signature": "<T>(observable: Observable<T>): Promise<T>",
+            "purpose": "Convert RxJS observables to promises safely",
+            "compatibility": "Works with RxJS 6.x and 7.x"
+          }
+        ],
+        "usage": "Essential for specs module test compatibility"
+      },
+      "typeAugmentation": {
+        "location": "src/compat/typescript-augmentation.d.ts",
+        "description": "TypeScript type augmentations for compatibility",
+        "augmentations": [
+          {
+            "module": "typescript",
+            "interfaces": [
+              "ClassDeclaration",
+              "MethodDeclaration",
+              "PropertyDeclaration",
+              "ParameterDeclaration",
+              "GetAccessor",
+              "SetAccessor"
+            ],
+            "purpose": "Add decorator properties to TS 5.x nodes"
+          }
+        ]
+      }
+    },
+    "integrationPoints": {
+      "withSpecs": {
+        "description": "Specs module uses compat for TypeScript AST operations",
+        "usage": [
+          "Rule verification with cross-version support",
+          "AST transformations in correction rules",
+          "Type-safe violation detection"
+        ]
+      },
+      "withSchematics": {
+        "description": "Schematics use compat for TS file generation",
+        "usage": [
+          "Component generation with proper decorators",
+          "Service creation with version-appropriate syntax",
+          "Module updates with compatibility checks"
+        ]
+      },
+      "withDuckPlane": {
+        "description": "DuckPlane_exe workflow integration",
+        "workflows": [
+          {
+            "name": "compatibility-check",
+            "trigger": "Pre-deployment validation",
+            "actions": [
+              "Verify TypeScript version compatibility",
+              "Check decorator syntax compliance",
+              "Validate type safety patterns"
+            ]
+          },
+          {
+            "name": "migration-assist",
+            "trigger": "TypeScript version upgrade",
+            "actions": [
+              "Identify breaking changes",
+              "Apply compatibility transformations",
+              "Generate migration report"
+            ]
+          }
+        ]
+      },
+      "withWarp": {
+        "description": "Warp terminal integration for compat operations",
+        "commands": [
+          {
+            "command": "ng g @stdlibschema/schematics:compat-check",
+            "purpose": "Run compatibility verification"
+          },
+          {
+            "command": "ng g @stdlibschema/schematics:migrate-ts",
+            "purpose": "Migrate TypeScript version with compat layer"
+          }
+        ]
+      },
+      "withUXnity": {
+        "description": "UXnity Developer Experience integration",
+        "features": [
+          "Real-time compatibility hints in IDE",
+          "Version-specific code suggestions",
+          "Automated compatibility fixes"
+        ],
+        "configurationPath": "doc-interface/src/observability/compat-metrics.ts"
+      }
+    },
+    "educationalContext": {
+      "bestPractices": [
+        {
+          "practice": "Always use type guards",
+          "rationale": "Prevents runtime errors and improves type inference",
+          "example": "Use isNonNullable() instead of 'as' assertions"
+        },
+        {
+          "practice": "Handle null/undefined explicitly",
+          "rationale": "Defensive programming prevents common JS errors",
+          "example": "Use safePropertyAccess() for uncertain objects"
+        },
+        {
+          "practice": "Use version-agnostic APIs",
+          "rationale": "Ensures code works across TypeScript versions",
+          "example": "Use updateDecorators() for all decorator operations"
+        }
+      ],
+      "commonPitfalls": [
+        {
+          "pitfall": "Direct type assertions",
+          "solution": "Use type guards and validation",
+          "severity": "High"
+        },
+        {
+          "pitfall": "Version-specific AST manipulation",
+          "solution": "Use compat layer abstractions",
+          "severity": "Medium"
+        },
+        {
+          "pitfall": "Unchecked observable operations",
+          "solution": "Use observableToPromise() helper",
+          "severity": "Low"
+        }
+      ]
+    },
+    "performanceMetrics": {
+      "overhead": "< 2ms per compatibility check",
+      "memoryCost": "Minimal - mostly compile-time checks",
+      "bundleImpact": "~3KB minified"
+    },
+    "testingStrategy": {
+      "coverage": {
+        "overall": "74.33%",
+        "target": "80%",
+        "criticalPaths": "95%+"
+      },
+      "strategies": [
+        "Unit tests for each utility function",
+        "Integration tests with multiple TS versions",
+        "Snapshot tests for AST transformations",
+        "Property-based testing for type guards"
+      ]
+    },
+    "versionSupport": {
+      "typescript": {
+        "minimum": "4.0.0",
+        "recommended": "5.0.0+",
+        "tested": ["4.0", "4.5", "4.9", "5.0", "5.1", "5.2", "5.3"]
+      },
+      "rxjs": {
+        "supported": ["6.x", "7.x"],
+        "adapter": "observableToPromise"
+      },
+      "angular": {
+        "minimum": "12.0.0",
+        "recommended": "16.0.0+"
+      }
+    },
+    "warpDriveWorkflow": {
+      "notebookId": "compat-module-guide",
+      "sections": [
+        {
+          "title": "Getting Started",
+          "content": "Introduction to TypeScript compatibility layer"
+        },
+        {
+          "title": "Type Safety Utilities",
+          "content": "Using safe operations to prevent runtime errors"
+        },
+        {
+          "title": "AST Manipulation",
+          "content": "Cross-version TypeScript AST transformations"
+        },
+        {
+          "title": "Migration Guide",
+          "content": "Upgrading TypeScript versions with compat layer"
+        }
+      ],
+      "interactiveExamples": true,
+      "aiAssistance": true
+    },
+    "duckPlaneIntegration": {
+      "taskMapping": {
+        "task-001": "Establish compatibility checking in master architecture",
+        "task-002": "Integrate compat layer with rumination foundation",
+        "task-003": "Define compat protocols for agent communication",
+        "task-010": "Log compatibility issues in audit system",
+        "task-020": "Display compat status in hub dashboard"
+      },
+      "mcpServer": {
+        "endpoint": "compat-check-server",
+        "capabilities": [
+          "version_detection",
+          "compatibility_analysis",
+          "migration_planning",
+          "code_transformation"
+        ]
+      }
+    }
+  }
+}

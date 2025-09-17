@@ -1,0 +1,244 @@
+{
+  "metadata": {
+    "name": "Documentation Embedding Map",
+    "version": "1.0.0",
+    "created": "2025-08-15T23:54:25Z",
+    "description": "Semantic embedding map for stdLibSchema documentation",
+    "total_docs": 25,
+    "categories": 5
+  },
+  
+  "architecture_docs": {
+    "docs/ARCHITECTURE.md": {
+      "purpose": "Core architectural principles and design patterns",
+      "key_concepts": [
+        "Separation of Concerns",
+        "Modularity",
+        "Composability",
+        "Type Safety",
+        "Layered Architecture"
+      ],
+      "sections": {
+        "core_principles": {
+          "embeddings": ["separation", "modularity", "composability", "type-safety"],
+          "importance": "critical"
+        },
+        "project_structure": {
+          "embeddings": ["stdlib", "specs", "schematics", "types"],
+          "maps_to": "src/"
+        },
+        "module_architecture": {
+          "embeddings": ["filesystem", "json", "ast", "workspace"],
+          "maps_to": "src/stdlib/"
+        },
+        "design_patterns": {
+          "embeddings": ["factory", "strategy", "builder", "observer"],
+          "examples": ["VerificationEngine", "CorrectionStrategy"]
+        }
+      }
+    },
+    
+    "docs/angular-standalone-components-guide.md": {
+      "purpose": "Guide for Angular 18+ standalone components",
+      "key_concepts": [
+        "Standalone Components",
+        "Signals State Management",
+        "Deferred Loading",
+        "New Control Flow Syntax"
+      ],
+      "implementation": {
+        "page_index_schematic": "src/schematics/page-index/",
+        "templates": "src/schematics/page-index/files/"
+      },
+      "code_patterns": {
+        "traditional_component": {
+          "uses": "NgModule",
+          "lifecycle": "OnInit"
+        },
+        "standalone_component": {
+          "uses": "standalone: true",
+          "state": "signals",
+          "control_flow": "@if, @for, @defer"
+        }
+      }
+    }
+  },
+  
+  "api_documentation": {
+    "docs/api/interfaces/SpecRule.md": {
+      "purpose": "Interface definition for specification rules",
+      "type_definition": {
+        "name": "SpecRule",
+        "properties": [
+          "id: string",
+          "name: string",
+          "severity: 'error' | 'warning' | 'info'",
+          "verify: Function",
+          "correct?: Function"
+        ],
+        "implementation": "src/types/specs.ts"
+      },
+      "usage_examples": [
+        "src/specs/rules/",
+        "src/specs/verification/engine.ts"
+      ]
+    },
+    
+    "docs/api/interfaces/DOCUMENTATION_QUALITY_REPORT.md": {
+      "purpose": "Report interface for documentation quality assessment",
+      "metrics": [
+        "completeness",
+        "clarity",
+        "examples",
+        "coverage"
+      ],
+      "generated_by": "src/specs/rules/documentation/",
+      "integration": "duck-doctor agent"
+    },
+    
+    "docs/api/functions/": {
+      "categories": {
+        "filesystem": {
+          "functions": ["readFile", "writeFile", "findFiles", "deleteFile"],
+          "location": "src/stdlib/filesystem/"
+        },
+        "json": {
+          "functions": ["readJson", "updateJson", "mergeJson"],
+          "location": "src/stdlib/json/"
+        },
+        "ast": {
+          "functions": ["addImport", "addDeclaration", "findNodes"],
+          "location": "src/stdlib/ast/"
+        },
+        "workspace": {
+          "functions": ["readWorkspace", "updateWorkspace", "getProjectInfo"],
+          "location": "src/stdlib/workspace/"
+        }
+      }
+    }
+  },
+  
+  "guides_and_tutorials": {
+    "getting_started": {
+      "docs": ["README.md", "CONTRIBUTING.md"],
+      "topics": ["installation", "basic-usage", "development-setup"],
+      "target_audience": "new_users"
+    },
+    "advanced_usage": {
+      "docs": ["docs/advanced/", "docs/patterns/"],
+      "topics": ["custom-rules", "plugin-development", "performance-optimization"],
+      "target_audience": "experienced_developers"
+    },
+    "migration_guides": {
+      "docs": ["docs/migration/"],
+      "topics": ["v1-to-v2", "angular-versions", "standalone-migration"],
+      "target_audience": "existing_users"
+    }
+  },
+  
+  "semantic_chunks": {
+    "architecture_layer": {
+      "concepts": [
+        "hub-and-spoke",
+        "signal-based-orchestration",
+        "tri-engine-rumination",
+        "phase-management"
+      ],
+      "priority": 1,
+      "embedding_strategy": "hierarchical"
+    },
+    "implementation_layer": {
+      "concepts": [
+        "schematic-rules",
+        "ast-manipulation",
+        "file-operations",
+        "workspace-updates"
+      ],
+      "priority": 2,
+      "embedding_strategy": "functional"
+    },
+    "testing_layer": {
+      "concepts": [
+        "jest-configuration",
+        "parallel-testing",
+        "coverage-tracking",
+        "performance-baselines"
+      ],
+      "priority": 3,
+      "embedding_strategy": "procedural"
+    },
+    "integration_layer": {
+      "concepts": [
+        "blc-protocols",
+        "ai-agents",
+        "redis-caching",
+        "observability"
+      ],
+      "priority": 2,
+      "embedding_strategy": "relational"
+    }
+  },
+  
+  "cross_references": {
+    "architecture_to_implementation": {
+      "ARCHITECTURE.md#layered-architecture": [
+        "src/index.ts",
+        "src/stdlib/index.ts",
+        "src/specs/index.ts"
+      ],
+      "ARCHITECTURE.md#design-patterns": [
+        "src/specs/verification/engine.ts",
+        "src/specs/correction/strategies/"
+      ]
+    },
+    "guides_to_schematics": {
+      "angular-standalone-components-guide.md": [
+        "src/schematics/page-index/",
+        "src/schematics/page-index/schema.json"
+      ]
+    },
+    "api_to_source": {
+      "SpecRule.md": "src/types/specs.ts",
+      "DOCUMENTATION_QUALITY_REPORT.md": "src/specs/rules/documentation/"
+    }
+  },
+  
+  "documentation_quality": {
+    "coverage_by_module": {
+      "stdlib": "85%",
+      "specs": "95%",
+      "schematics": "70%",
+      "types": "100%",
+      "plugins": "60%"
+    },
+    "missing_documentation": [
+      "src/blc001/ - needs protocol documentation",
+      "src/blc010/ - needs AI integration guide",
+      "src/plugins/ - needs plugin development guide"
+    ],
+    "quality_scores": {
+      "architecture": 9,
+      "api_reference": 8,
+      "guides": 7,
+      "examples": 6
+    }
+  },
+  
+  "embedding_instructions": {
+    "chunking_strategy": {
+      "method": "semantic-sections",
+      "max_tokens": 1024,
+      "overlap": 64
+    },
+    "priority_order": [
+      "architecture_docs",
+      "api_documentation",
+      "guides_and_tutorials"
+    ],
+    "indexing": {
+      "primary": "concept",
+      "secondary": ["module", "function", "pattern"],
+      "tertiary": "examples"
+    }
+  }
+}

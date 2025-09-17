@@ -1,0 +1,71 @@
+{
+  "functions": {
+    "api/latency.ts": {
+      "runtime": "edge",
+      "maxDuration": 10,
+      "regions": [
+        "iad1",
+        "sfo1", 
+        "pdx1",
+        "lhr1",
+        "fra1",
+        "gru1",
+        "syd1",
+        "hnd1",
+        "sin1"
+      ]
+    },
+    "api/metrics.ts": {
+      "runtime": "edge",
+      "maxDuration": 10,
+      "regions": ["iad1", "lhr1", "hnd1"]
+    },
+    "api/cache.ts": {
+      "runtime": "edge",
+      "maxDuration": 5,
+      "regions": ["iad1", "sfo1", "lhr1", "fra1"]
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/v1/latency/:path*",
+      "destination": "/api/latency"
+    },
+    {
+      "source": "/api/v1/metrics/:path*",
+      "destination": "/api/metrics"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET,POST,PUT,DELETE,OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "max-age=10, stale-while-revalidate=30"
+        }
+      ]
+    }
+  ],
+  "env": {
+    "EDGE_CONFIG": "@stdlibschema-edge-config",
+    "KV_REST_API_URL": "@latency-kv-rest-api-url",
+    "KV_REST_API_TOKEN": "@latency-kv-rest-api-token"
+  },
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm install",
+  "framework": null
+}

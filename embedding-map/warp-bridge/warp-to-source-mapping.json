@@ -1,0 +1,259 @@
+{
+  "metadata": {
+    "name": "Warp-to-Source Bridge Mapping",
+    "version": "1.0.0",
+    "created": "2025-08-15T23:54:25Z",
+    "description": "Bridges .warp/ configuration understanding with src/ directory structure for enhanced AI agent comprehension",
+    "purpose": "Enable Warp Agent to understand how configuration relates to actual source code implementation"
+  },
+  
+  "mappings": {
+    "workspace_to_modules": {
+      ".warp/workspace.json": {
+        "modules.core.stdlib": "src/stdlib/",
+        "modules.core.specs": "src/specs/",
+        "modules.core.schematics": "src/schematics/",
+        "modules.core.blc001": "src/blc001/",
+        "modules.core.blc010": "src/blc010/",
+        "modules.core.orchestration": "src/stdlib/orchestration/",
+        "modules.core.plugins": "src/plugins/"
+      }
+    },
+    
+    "rules_to_implementation": {
+      ".warp/rules.md": {
+        "architecture_patterns": {
+          "hub_and_spoke": [
+            "src/stdlib/orchestration/hub-core/",
+            "src/stdlib/orchestration/hub-core/orchestrator.ts",
+            "src/stdlib/orchestration/hub-core/coordinator.ts"
+          ],
+          "signal_based_orchestration": [
+            "src/stdlib/orchestration/hub-core/signal-orchestrator.ts"
+          ],
+          "module_boundaries": [
+            "src/stdlib/index.ts",
+            "src/specs/index.ts",
+            "src/schematics/index.ts"
+          ]
+        },
+        "testing_requirements": {
+          "jest_configuration": "jest.config.js",
+          "parallel_execution": "jest.setup.ts",
+          "project_tests": {
+            "stdlib": "src/stdlib/**/*.spec.ts",
+            "specs": "src/specs/**/*.spec.ts",
+            "schematics": "src/schematics/**/*.spec.ts"
+          }
+        },
+        "blc_protocols": {
+          "blc_001": {
+            "implementation": "src/blc001/",
+            "server": "src/blc001/scripts/start-server.ts",
+            "types": "src/blc001/types.ts"
+          },
+          "blc_010": {
+            "implementation": "src/blc010/",
+            "endpoint": "src/blc010/endpoint-server.ts",
+            "ai_integration": "src/blc010/ai-handler.ts"
+          }
+        },
+        "specs_module": {
+          "rules": "src/specs/rules/",
+          "verification": "src/specs/verification/",
+          "correction": "src/specs/correction/",
+          "plugin_system": "src/specs/plugin/"
+        }
+      }
+    },
+    
+    "workflows_to_scripts": {
+      ".warp/workflows/test-coverage.yaml": {
+        "commands": {
+          "test:coverage:parallel": "package.json#scripts.test:coverage:parallel",
+          "coverage:quick": "get-coverage-unified.ts",
+          "cache:warm": "scripts/cache-manager.js",
+          "cache:optimize": "scripts/cache-manager.js#optimize"
+        },
+        "modules_tested": [
+          "src/stdlib/",
+          "src/specs/",
+          "src/schematics/"
+        ]
+      },
+      ".warp/workflows/blc-services.yaml": {
+        "commands": {
+          "blc001:start": "src/blc001/scripts/start-bridge.ts",
+          "blc001:server": "src/blc001/scripts/start-server.ts",
+          "blc010:server": "src/blc010/scripts/start-server.ts"
+        },
+        "service_implementations": [
+          "src/blc001/bridge.ts",
+          "src/blc001/server.ts",
+          "src/blc010/endpoint-server.ts"
+        ]
+      },
+      ".warp/workflows/ai-orchestration.yaml": {
+        "agent_integration": "../.claude/agents/",
+        "hub_core": "src/stdlib/orchestration/hub-core/",
+        "task_router": "src/stdlib/orchestration/task-router.ts",
+        "agent_manager": "src/stdlib/orchestration/hub-core/agent-manager.ts"
+      }
+    },
+    
+    "session_init_to_environment": {
+      ".warp/session-init.sh": {
+        "environment_variables": {
+          "NODE_ENV": "process.env.NODE_ENV",
+          "REDIS_PORT": "src/stdlib/orchestration/hub-core/storage.ts#REDIS_CONFIG",
+          "BLC001_PORT": "src/blc001/config.ts#PORT",
+          "BLC010_PORT": "src/blc010/config.ts#PORT"
+        },
+        "cache_warming": [
+          "scripts/cache-manager.js",
+          ".jest-cache/",
+          "coverage/"
+        ],
+        "prerequisites": {
+          "node_version": "package.json#engines.node",
+          "npm_version": "package.json#engines.npm",
+          "dependencies": "package.json#dependencies"
+        }
+      }
+    }
+  },
+  
+  "semantic_relationships": {
+    "configuration_to_implementation": [
+      {
+        "config": ".warp/workspace.json#integrations.orchestration.hubCore",
+        "implementation": "src/stdlib/orchestration/hub-core/",
+        "relationship": "defines",
+        "components": [
+          "signal-orchestrator",
+          "phase-manager",
+          "agent-manager",
+          "coordinator"
+        ]
+      },
+      {
+        "config": ".warp/workspace.json#integrations.agents",
+        "implementation": "src/stdlib/utils/agents/",
+        "relationship": "configures",
+        "agents": [
+          "development-agent",
+          "security-agent",
+          "testing-agent",
+          "deployment-agent",
+          "financial-agent"
+        ]
+      },
+      {
+        "config": ".warp/workspace.json#integrations.blc",
+        "implementation": ["src/blc001/", "src/blc010/"],
+        "relationship": "specifies_protocols",
+        "protocols": ["BLC-001", "BLC-010"]
+      }
+    ],
+    
+    "rules_to_patterns": [
+      {
+        "rule": "Hub-and-spoke architecture",
+        "pattern": "Central coordinator with peripheral agents",
+        "implementation": [
+          "src/stdlib/orchestration/hub-core/coordinator.ts",
+          "src/stdlib/orchestration/hub-core/agent-manager.ts"
+        ]
+      },
+      {
+        "rule": "Signal-based orchestration",
+        "pattern": "Reactive state management with signals",
+        "implementation": [
+          "src/stdlib/orchestration/hub-core/signal-orchestrator.ts"
+        ]
+      },
+      {
+        "rule": "Module boundaries",
+        "pattern": "Strict separation of concerns",
+        "implementation": [
+          "src/stdlib/index.ts",
+          "src/specs/index.ts",
+          "src/schematics/index.ts"
+        ]
+      }
+    ],
+    
+    "workflow_to_features": [
+      {
+        "workflow": "test-coverage",
+        "features": [
+          "Parallel test execution",
+          "Coverage caching",
+          "Module-wise testing"
+        ],
+        "implementation": [
+          "jest.config.js",
+          "scripts/cache-manager.js",
+          "get-coverage-unified.ts"
+        ]
+      },
+      {
+        "workflow": "blc-services",
+        "features": [
+          "WebSocket communication",
+          "AI endpoint integration",
+          "Health monitoring"
+        ],
+        "implementation": [
+          "src/blc001/server.ts",
+          "src/blc010/endpoint-server.ts"
+        ]
+      },
+      {
+        "workflow": "ai-orchestration",
+        "features": [
+          "Multi-agent coordination",
+          "Task routing",
+          "Workflow templates"
+        ],
+        "implementation": [
+          "src/stdlib/orchestration/hub-core/",
+          "../.claude/agents/"
+        ]
+      }
+    ]
+  },
+  
+  "navigation_hints": {
+    "from_config_to_code": {
+      "workspace.json → module": "Follow modules.core.{module}.path",
+      "rules.md → implementation": "Search for pattern names in src/",
+      "workflow → script": "Check package.json#scripts or scripts/ directory",
+      "session-init → environment": "Look for process.env usage in code"
+    },
+    "from_code_to_config": {
+      "src/module → workspace": "Find module name in workspace.json#modules",
+      "*.spec.ts → testing rule": "Check .warp/rules.md#testing_requirements",
+      "script → workflow": "Search workflow yaml files for script name",
+      "environment var → session": "Check .warp/session-init.sh for exports"
+    }
+  },
+  
+  "coverage_tracking": {
+    "modules_with_warp_config": [
+      "stdlib (72%)",
+      "specs (100%)",
+      "schematics (60%)",
+      "blc001 (85%)",
+      "blc010 (90%)",
+      "orchestration (75%)",
+      "plugins (80%)"
+    ],
+    "config_completeness": {
+      "workspace.json": "100%",
+      "rules.md": "100%",
+      "workflows": "100%",
+      "session-init.sh": "100%"
+    }
+  }
+}
