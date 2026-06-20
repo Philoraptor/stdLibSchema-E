@@ -84,13 +84,15 @@ domain veto on behalf of α–δ.
 
 | Class | Intent | Who can authorize | Effect on the veto | Reversibility precondition | Fail-mode |
 |-------|--------|-------------------|--------------------|----------------------------|-----------|
-| **Soft** | Proceed despite an *advisory* veto. | The owning agent (auto), within policy thresholds. | Veto downgraded to a logged warning; step proceeds. | Step effects must be reversible. | **Fail-open, logged** — if the override evaluator errors, the underlying veto stands and the step is *warned-and-allowed* only when reversibility holds; otherwise it falls through to Hard. |
+| **Soft** | Proceed despite an *advisory* veto. | The owning agent (auto), within policy thresholds. | Veto downgraded to a logged warning; step proceeds. | Step effects must be reversible. | **Fail-open, logged** — on success the veto is downgraded to a logged warning and the reversible step proceeds. If the override evaluator itself errors, the step is *warned-and-allowed* only when reversibility holds (the error is logged); if effects are not reversible, the request falls through to the Hard path. |
 | **Hard** | Proceed despite a *blocking* veto. | Requires authority **above** the owning agent: escalation/human approver. | Veto suspended for this step after explicit approval. | Reversal plan must be captured even if effects are reversible. | **Fail-closed, halt** — any error, missing approval, or audit-write failure ⇒ the step halts. |
 | **Bypass** | *Skip the check entirely* (the agent does not run for this step). | Dual control: owning agent **and** ε, plus a scoped, expiring sanction. | The check is not executed; step proceeds as if no veto domain applied. | Effects must be reversible **and** a snapshot/rollback token captured first. | **Fail-closed, recorded** — bypass requires a successful append-only record *before* the skip; if recording fails, no bypass. |
 
-**Class selection invariant:** Soft < Hard < Bypass in privilege. A request
-may be *downgraded* automatically (e.g., Hard → denied → escalate) but never
-*upgraded* automatically. Upgrading classes always requires a human in §7.
+**Class selection invariant:** Soft < Hard < Bypass in privilege. Privilege may
+be *reduced* automatically (a Soft that fails its reversibility guard is
+re-evaluated on the stricter Hard path; a Hard with no approval is denied and
+escalated). Privilege is never *increased* automatically — moving a request to
+a more permissive class (toward Bypass) always requires a human in §7.
 
 ## 5. Trigger Table (agent → signal → condition → class → fail-mode)
 
@@ -105,15 +107,17 @@ illustrative of the planned policy, not an executable config.
 | **β** | `dependency.vuln` | CVE severity ≥ high, no patched version available | Hard | Fail-closed, halt |
 | **γ** | `coverage.below_gate` | Delta is test-only files; production coverage unchanged | Soft | Fail-open, logged |
 | **γ** | `tests.failing` | Failure is a known-flaky test on the quarantine list | Soft | Fail-open, logged |
-| **δ** | `mutation.large` | Mutation is reversible and snapshot captured | Hard | Fail-closed, halt |
-| **δ** | `mutation.irreversible` | Effect cannot be rolled back | **Bypass only** | Fail-closed, recorded |
+| **δ** | `mutation.large` | Mutation is reversible, snapshot/rollback token captured, scoped sanction in effect | **Bypass** | Fail-closed, recorded |
+| **δ** | `mutation.irreversible` | Effect cannot be rolled back (no reversal possible) | **None** (override denied) | Fail-closed, halt |
 | **ε** | `audit.sink_unreachable` | Audit log cannot be written | **None** (override denied) | Fail-closed, halt |
 | **ε** | `event.out_of_order` | Sequence gap detected in event stream | Hard | Fail-closed, halt |
 
 > **Reading the table:** "Default class" is the *most permissive* class the
 > policy will entertain for that signal. The decision tree may still deny or
-> escalate. The ε `audit.sink_unreachable` row is the hard floor: with no
-> durable record, nothing proceeds.
+> escalate. Two rows are hard floors that admit **no** override and route
+> straight to halt / human review: ε `audit.sink_unreachable` (no durable
+> record ⇒ nothing proceeds) and δ `mutation.irreversible` (no rollback ⇒ the
+> rollback-first value, §2, forbids every class).
 
 ## 6. Override Decision Tree
 
@@ -127,9 +131,10 @@ flowchart TD
     D -- No match --> H[Honor veto: halt step]
     D -- Match --> E{Default class?}
 
+    E -- None (denied) --> H2
     E -- Soft --> S1{Effects<br/>reversible?}
     S1 -- Yes --> S2[Record event · downgrade veto to warning · PROCEED]
-    S1 -- No --> E2[Promote to Hard path]
+    S1 -- No --> E2
 
     E -- Hard --> E2[Hard path]
     E2 --> HA{Approval present?<br/>authority &gt; agent X}
@@ -237,7 +242,7 @@ are never edited or deleted.
 | `phase` | enum | yes | `veto-raised` \| `override-requested` \| `evaluated` \| `proceeded` \| `escalated` \| `halted` \| `human-decided`. |
 | `overrideClass` | enum/null | conditional | Set once a class is chosen; null at `veto-raised`. |
 | `decision` | enum | conditional | `allow` \| `deny` \| `skip` \| `retry` \| `escalate`. |
-| `failMode` | enum | yes | Class fail-mode actually applied. |
+| `failMode` | enum/null | conditional | Class fail-mode actually applied; null until a class is chosen. |
 | `reversibility` | enum | yes | Snapshot of the reversibility judgment. |
 | `rollbackToken` | string/null | conditional | Required for `bypass` proceed. |
 | `attempt` | integer | yes | Retry counter (0-based); supports §7 retry-N. |
