@@ -1,10 +1,29 @@
 name: CI
 
 on:
+  # Scoped to buildable code so this workflow does not run on docs/spec-only
+  # changes. It requires an installed package (lockfile + src/); until those
+  # exist at the repo root it stays dormant on documentation PRs.
   push:
     branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'api/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'jest.config.js'
   pull_request:
     branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'api/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'jest.config.js'
 
 jobs:
   test:
@@ -17,10 +36,10 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     
     - name: Setup Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v5
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
@@ -86,10 +105,10 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v5
       with:
         node-version: '24.5.0'
         cache: 'npm'
