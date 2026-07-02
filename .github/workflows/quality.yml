@@ -1,10 +1,29 @@
 name: Code Quality
 
 on:
+  # Scoped to buildable code so this workflow does not run on docs/spec-only
+  # changes. It requires an installed package (lockfile + src/); until those
+  # exist at the repo root it stays dormant on documentation PRs.
   push:
     branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'api/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'jest.config.js'
   pull_request:
     branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'api/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'jest.config.js'
 
 jobs:
   lint:
