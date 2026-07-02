@@ -46,17 +46,25 @@ jobs:
           # Optional: Use sticky comments to make Claude reuse the same comment on subsequent pushes to the same PR
           # use_sticky_comment: true
           
-          # Phase 2C Infrastructure-focused review prompt
+          # General-purpose review prompt — adapts to whatever the PR actually changes
           direct_prompt: |
-            Review this PR with focus on Phase 2C Infrastructure & Utilities:
-            - For error handling: Recovery strategies, circuit breakers, type safety
-            - For logging: Structured logging, PII redaction, performance impact
-            - For filesystem: Atomic operations, security validation, race conditions
-            - For caching: Multi-tier consistency, eviction policies, memory management
-            - For testing: Infrastructure test isolation, resource cleanup
-            - For performance: Memory leaks, profiling accuracy, benchmark validity
-            - Security: Validate no secrets in code, proper error sanitization
-            - Integration: Check component compatibility and dependency cycles
+            Review this PR. First identify what kind of change it is from the
+            diff (source code, docs/specs, tests, CI/config, or a mix), then
+            apply the checks that fit — don't force criteria that don't apply.
+
+            For source code: correctness, error handling, security (no secrets,
+            proper input/error sanitization), performance, and integration
+            (component compatibility, dependency cycles).
+
+            For docs & specs: clarity, internal consistency, completeness,
+            and agreement with the code/behavior they describe.
+
+            For tests: coverage of the change, isolation, and resource cleanup.
+
+            For CI/config: correctness and security of the workflow or config.
+
+            Keep feedback focused and actionable. If the PR is small or purely
+            documentation, a short review is fine — don't manufacture findings.
           
           # Optional: Different prompts for different authors
           # direct_prompt: |
