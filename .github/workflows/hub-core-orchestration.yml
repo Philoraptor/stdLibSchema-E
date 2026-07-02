@@ -43,7 +43,7 @@ jobs:
     
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           
@@ -82,7 +82,7 @@ jobs:
     
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ matrix.core }}
           fetch-depth: 0
@@ -106,9 +106,9 @@ jobs:
           git log -1 --format="%ai %an: %s" >> ${{ env.ORCHESTRATION_REPORT }}/${{ matrix.core }}-health.md
       
       - name: Upload Health Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: health-check-${{ needs.initialize.outputs.operation_id }}
+          name: health-check-${{ needs.initialize.outputs.operation_id }}-${{ strategy.job-index }}
           path: ${{ env.ORCHESTRATION_REPORT }}/
           retention-days: 30
 
@@ -124,7 +124,7 @@ jobs:
     
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
@@ -170,7 +170,7 @@ jobs:
     
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ env.HUB_BRANCH }}
@@ -233,7 +233,7 @@ jobs:
     
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ env.HUB_BRANCH }}
@@ -292,7 +292,7 @@ jobs:
     
     steps:
       - name: Download All Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: reports/
       
@@ -319,7 +319,7 @@ jobs:
           fi
       
       - name: Upload Final Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: orchestration-report-${{ needs.initialize.outputs.operation_id }}
           path: final-report/

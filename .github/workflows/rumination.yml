@@ -41,14 +41,14 @@ jobs:
     
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0 # Need full history for evolution analysis
       
       - name: Setup Analysis Environment
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20.x'
+          node-version: '24.5.0'
           cache: 'npm'
       
       - name: Install Dependencies
@@ -81,7 +81,7 @@ jobs:
           npx ts-complexity-analyzer src/ --format json > ${{ env.ANALYSIS_OUTPUT_DIR }}/complexity-report.json
       
       - name: Upload Architecture Reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: architecture-rumination-${{ github.run_number }}
           path: ${{ env.ANALYSIS_OUTPUT_DIR }}/
@@ -95,12 +95,12 @@ jobs:
     
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - name: Setup Analysis Environment
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20.x'
+          node-version: '24.5.0'
           cache: 'npm'
       
       - name: Analyze Dependencies
@@ -126,7 +126,7 @@ jobs:
           du -sh dist/* > ${{ env.ANALYSIS_OUTPUT_DIR }}/bundle-sizes.txt
       
       - name: Upload Dependency Reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dependency-rumination-${{ github.run_number }}
           path: ${{ env.ANALYSIS_OUTPUT_DIR }}/
@@ -140,12 +140,12 @@ jobs:
     
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - name: Setup Analysis Environment
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20.x'
+          node-version: '24.5.0'
           cache: 'npm'
       
       - name: Install Dependencies
@@ -174,7 +174,7 @@ jobs:
           " > ${{ env.ANALYSIS_OUTPUT_DIR }}/memory-analysis.json
       
       - name: Upload Performance Reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: performance-rumination-${{ github.run_number }}
           path: ${{ env.ANALYSIS_OUTPUT_DIR }}/
@@ -187,14 +187,14 @@ jobs:
     
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
       
       - name: Setup Analysis Environment
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20.x'
+          node-version: '24.5.0'
           cache: 'npm'
       
       - name: Install Analysis Tools
@@ -220,7 +220,7 @@ jobs:
           find src -name "*.ts" -exec grep -L "^\s*\/\*\*" {} \; | wc -l >> ${{ env.ANALYSIS_OUTPUT_DIR }}/doc-coverage.txt
       
       - name: Upload Quality Reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: quality-rumination-${{ github.run_number }}
           path: ${{ env.ANALYSIS_OUTPUT_DIR }}/
@@ -235,7 +235,7 @@ jobs:
     
     steps:
       - name: Download All Reports
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: all-reports/
       
@@ -252,7 +252,7 @@ jobs:
           echo "Full analysis reports are available in the workflow artifacts." >> final-report/synthesis.md
       
       - name: Upload Final Synthesis
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: rumination-synthesis-${{ github.run_number }}
           path: final-report/

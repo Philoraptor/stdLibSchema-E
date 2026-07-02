@@ -85,14 +85,14 @@ jobs:
     
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.inputs.target_ref }}
       
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20.x'
+          node-version: '24.5.0'
           cache: 'npm'
       
       - name: Install Dependencies
@@ -123,7 +123,7 @@ jobs:
           fi
       
       - name: Upload Coverage Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage/
@@ -137,14 +137,14 @@ jobs:
     
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.inputs.target_ref }}
       
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20.x'
+          node-version: '24.5.0'
           cache: 'npm'
       
       - name: Install Dependencies
@@ -198,7 +198,7 @@ jobs:
           "
       
       - name: Upload Complexity Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: complexity-report
           path: quality-reports/
@@ -212,14 +212,14 @@ jobs:
     
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.inputs.target_ref }}
       
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20.x'
+          node-version: '24.5.0'
       
       - name: Install Dependencies
         run: |
@@ -255,7 +255,7 @@ jobs:
       
       - name: Upload Duplication Report
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: duplication-report
           path: quality-reports/
@@ -268,7 +268,7 @@ jobs:
     
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.inputs.target_ref }}
       
@@ -302,14 +302,14 @@ jobs:
     
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.inputs.target_ref }}
       
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20.x'
+          node-version: '24.5.0'
           cache: 'npm'
       
       - name: Install Dependencies
@@ -372,14 +372,14 @@ jobs:
     
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.inputs.target_ref }}
       
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20.x'
+          node-version: '24.5.0'
           cache: 'npm'
       
       - name: Install Dependencies
@@ -429,7 +429,7 @@ jobs:
     
     steps:
       - name: Download All Reports
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: all-reports/
       
@@ -462,7 +462,7 @@ jobs:
           echo "Detailed reports for each gate are available in the workflow artifacts." >> final-report/quality-summary.md
       
       - name: Upload Final Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: quality-gates-summary
           path: final-report/
